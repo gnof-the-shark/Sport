@@ -613,13 +613,3 @@ select.form-control option { background: var(--bg-card); }
 .admin-only {
     display: none !important;
 }
-
-/* Classe utilitaire pour afficher en Flex si besoin */
-.admin-show-flex {
-    display: flex !important;
-}
-
-/* Classe utilitaire pour afficher en Block si besoin */
-.admin-show-block {
-    display: block !important;
-}
