@@ -1,4 +1,4 @@
-// Configuration de votre projet Firebase
+// firebase-config.js
 const firebaseConfig = {
   apiKey: "AIzaSyCT1SUk76IeBXkCbSSvbX4S-9sWQm8jQUU",
   authDomain: "project-83ac5791-18d5-4b8d-9d0.firebaseapp.com",
@@ -9,13 +9,10 @@ const firebaseConfig = {
   measurementId: "G-0G99G1NCKQ"
 };
 
-// Initialisation de Firebase (Version Compat pour navigateur)
+// Initialisation
 firebase.initializeApp(firebaseConfig);
-
-// Rendre les services accessibles aux autres fichiers (app.js, admin.js)
 const auth = firebase.auth();
-const db   = firebase.firestore();
+const db = firebase.firestore();
 
-// --- CONFIGURATION ADMIN ---
-// REMPLACEZ CECI par votre email pour avoir les accès de gestion
+// REMPLACE PAR TON EMAIL POUR ÊTRE ADMIN
 const ADMIN_EMAIL = "christophewhite14@gmail.com";
