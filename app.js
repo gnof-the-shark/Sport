@@ -11,9 +11,6 @@ const SPORTS = {
 
 const MAX_STREAK_DAYS = 365; // look-back limit for streak calculation
 const MAX_MESSAGES    = 50;  // maximum messages loaded in the chat
-const MS_PER_HOUR     = 3600000;
-const MS_PER_MINUTE   = 60000;
-const MS_PER_SECOND   = 1000;
 
 let currentUser = null;
 let isAdmin = false;
@@ -414,9 +411,17 @@ function subscribeCompetition() {
             }
 
             const comp    = snap.data();
-            const endDate = comp.endDate && comp.endDate.toDate ? comp.endDate.toDate() : new Date(comp.endDate);
+            const rawEnd  = comp.endDate;
+            let endDate;
+            if (rawEnd && typeof rawEnd.toDate === "function") {
+                endDate = rawEnd.toDate();
+            } else if (rawEnd && typeof rawEnd.seconds === "number") {
+                endDate = new Date(rawEnd.seconds * 1000 + Math.floor((rawEnd.nanoseconds || 0) / 1e6));
+            } else {
+                endDate = new Date(rawEnd);
+            }
 
-            if (endDate <= new Date()) {
+            if (!endDate || isNaN(endDate.getTime()) || endDate <= new Date()) {
                 banner.classList.add("hidden");
                 return;
             }
@@ -426,21 +431,27 @@ function subscribeCompetition() {
             document.getElementById("comp-sub").textContent   = comp.description || "Participez dès maintenant !";
 
             function updateTimer() {
-                const diff = endDate - new Date();
+                const diff = endDate.getTime() - Date.now();
                 if (diff <= 0) {
                     document.getElementById("comp-timer").textContent = "Terminé";
-                    clearInterval(compTimerInterval);
-                    compTimerInterval = null;
+                    if (compTimerInterval) { clearInterval(compTimerInterval); compTimerInterval = null; }
                     return;
                 }
-                const h = Math.floor(diff / MS_PER_HOUR);
-                const m = Math.floor((diff % MS_PER_HOUR) / MS_PER_MINUTE);
-                const s = Math.floor((diff % MS_PER_MINUTE) / MS_PER_SECOND);
+                const totalSec = Math.floor(diff / 1000);
+                const d = Math.floor(totalSec / 86400);
+                const h = Math.floor((totalSec % 86400) / 3600);
+                const m = Math.floor((totalSec % 3600) / 60);
+                const s = totalSec % 60;
+                const hh = String(h).padStart(2, "0");
+                const mm = String(m).padStart(2, "0");
+                const ss = String(s).padStart(2, "0");
                 document.getElementById("comp-timer").textContent =
-                    String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+                    d > 0 ? d + "j " + hh + ":" + mm + ":" + ss : hh + ":" + mm + ":" + ss;
             }
             updateTimer();
-            compTimerInterval = setInterval(updateTimer, 1000);
+            if (endDate > new Date()) {
+                compTimerInterval = setInterval(updateTimer, 1000);
+            }
         }, err => {
             console.error("Competition listener error:", err);
         });
