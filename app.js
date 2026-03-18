@@ -493,8 +493,10 @@ function subscribeMessages() {
 
                 const timeEl = document.createElement("span");
                 timeEl.className = "feed-time";
-                if (d.timestamp) {
-                    const ts = d.timestamp.toDate ? d.timestamp.toDate() : new Date(d.timestamp);
+                // Use serverTimestamp if available, otherwise fall back to clientTimestamp
+                const tsSource = d.timestamp || (d.clientTimestamp ? new Date(d.clientTimestamp) : null);
+                if (tsSource) {
+                    const ts = tsSource.toDate ? tsSource.toDate() : new Date(tsSource);
                     timeEl.textContent = formatTimeAgo(ts);
                 }
 
@@ -520,6 +522,7 @@ function subscribeMessages() {
             list.scrollTop = list.scrollHeight;
         }, err => {
             console.error("Messages listener error:", err);
+            showToast("Erreur de chargement des messages", "error");
         });
 }
 
@@ -646,13 +649,16 @@ window.sendMessage = async (e) => {
     const name = currentUser.displayName || currentUser.email;
     try {
         await db.collection("messages").add({
-            userId:      currentUser.uid,
-            displayName: name,
-            text:        text,
-            timestamp:   firebase.firestore.FieldValue.serverTimestamp()
+            userId:          currentUser.uid,
+            displayName:     name,
+            text:            text,
+            timestamp:       firebase.firestore.FieldValue.serverTimestamp(),
+            clientTimestamp: Date.now()
         });
+        input.focus();
     } catch (err) {
         console.error("sendMessage error:", err);
+        input.value = text; // restore on error
         showToast("Erreur lors de l'envoi du message", "error");
     }
 };
@@ -676,6 +682,92 @@ window.openModal = (id) => {
 
 window.closeModal = (id) => {
     document.getElementById(id).classList.add("hidden");
+};
+
+// ── User account menu ─────────────────────────────────────────────────────────
+window.toggleUserMenu = () => {
+    document.getElementById("user-menu").classList.toggle("hidden");
+};
+
+window.closeUserMenu = () => {
+    document.getElementById("user-menu").classList.add("hidden");
+};
+
+document.addEventListener("click", (e) => {
+    const wrapper = document.getElementById("user-menu-wrapper");
+    if (wrapper && !wrapper.contains(e.target)) {
+        const menu = document.getElementById("user-menu");
+        if (menu) menu.classList.add("hidden");
+    }
+});
+
+// ── Helper: batch-delete an array of Firestore doc references ─────────────────
+async function deleteInBatches(docs) {
+    const BATCH_SIZE = 400;
+    for (let i = 0; i < docs.length; i += BATCH_SIZE) {
+        const batch = db.batch();
+        docs.slice(i, i + BATCH_SIZE).forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+    }
+}
+
+// ── Delete own account ────────────────────────────────────────────────────────
+window.handleDeleteAccount = async () => {
+    const confirmInput = document.getElementById("delete-account-confirm");
+    if (confirmInput.value.trim() !== "SUPPRIMER") {
+        showToast("Tapez SUPPRIMER pour confirmer", "error");
+        return;
+    }
+    const uid = currentUser.uid;
+    const btn = document.querySelector("#modal-delete-account .btn-danger");
+    if (btn) btn.disabled = true;
+    try {
+        const [workoutsSnap, messagesSnap] = await Promise.all([
+            db.collection("workouts").where("userId", "==", uid).get(),
+            db.collection("messages").where("userId", "==", uid).get()
+        ]);
+        await deleteInBatches([...workoutsSnap.docs, ...messagesSnap.docs]);
+        await db.collection("users").doc(uid).delete();
+        await currentUser.delete();
+        closeModal("modal-delete-account");
+    } catch (err) {
+        if (btn) btn.disabled = false;
+        confirmInput.value = "";
+        if (err.code === "auth/requires-recent-login") {
+            showToast("Reconnectez-vous d'abord, puis réessayez.", "error");
+            closeModal("modal-delete-account");
+            auth.signOut();
+        } else {
+            console.error("deleteAccount error:", err);
+            showToast("Erreur : " + err.message, "error");
+        }
+    }
+};
+
+// ── Admin: delete a user's data ───────────────────────────────────────────────
+window.adminDeleteUser = async (uid, displayName, triggerBtn) => {
+    if (!confirm(`Supprimer le compte de « ${displayName} » ?\nToutes ses données seront effacées. Cette action est irréversible.`)) return;
+    if (triggerBtn) triggerBtn.disabled = true;
+    try {
+        const [workoutsSnap, messagesSnap] = await Promise.all([
+            db.collection("workouts").where("userId", "==", uid).get(),
+            db.collection("messages").where("userId", "==", uid).get()
+        ]);
+        await deleteInBatches([...workoutsSnap.docs, ...messagesSnap.docs]);
+        await db.collection("users").doc(uid).delete();
+        showToast(`Données de « ${displayName} » supprimées.`, "success");
+        loadAdminStats();
+        // Reload users list
+        adminPanel.loadUsers(
+            document.getElementById("users-table-body"),
+            currentUser.uid,
+            ADMIN_EMAIL
+        );
+    } catch (err) {
+        if (triggerBtn) triggerBtn.disabled = false;
+        console.error("adminDeleteUser error:", err);
+        showToast("Erreur : " + err.message, "error");
+    }
 };
 
 window.adminResetScores = async () => {

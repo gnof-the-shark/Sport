@@ -238,7 +238,40 @@ select.form-control option { background: var(--bg-card); }
     font-weight: 700; font-size: 0.9rem; color: #fff;
     cursor: pointer;
     flex-shrink: 0;
+    user-select: none;
 }
+
+/* User menu dropdown */
+.user-menu-wrapper { position: relative; }
+.user-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
+    min-width: 200px;
+    z-index: 200;
+    overflow: hidden;
+    animation: fadeIn 0.15s ease;
+}
+.user-menu-item {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    text-align: left;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: background var(--transition);
+    display: block;
+}
+.user-menu-item:hover { background: var(--bg-input); }
+.user-menu-danger { color: var(--danger); }
+.user-menu-danger:hover { background: rgba(231,76,60,0.1); }
+
 .admin-badge {
     background: var(--warning);
     color: #000;
@@ -449,6 +482,7 @@ select.form-control option { background: var(--bg-card); }
     gap: 0.75rem;
     margin-bottom: 1rem;
     padding-right: 0.25rem;
+    scroll-behavior: smooth;
 }
 .message-item {
     display: flex;
@@ -646,18 +680,32 @@ select.form-control option { background: var(--bg-card); }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 600px) {
-    .main-content { padding: 1rem; }
+    .main-content { padding: 0.75rem; }
     .auth-box { padding: 1.75rem 1.25rem; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
     .admin-grid { grid-template-columns: 1fr; }
-    .modal { padding: 1.5rem; }
-    .navbar { padding: 0.6rem 1rem; }
+    .modal { padding: 1.25rem; }
+    .modal-overlay { align-items: flex-end; padding: 0; }
+    .modal { border-radius: var(--radius) var(--radius) 0 0; max-height: 90vh; overflow-y: auto; }
+    .navbar { padding: 0.6rem 0.75rem; }
+    .navbar-right { gap: 0.5rem; }
+    .brand-text { display: none; }
     .competition-banner { flex-direction: column; }
+    .card { padding: 1rem; }
+    /* messages – fill available height */
+    #tab-messages { padding: 0; }
+    #tab-messages .card { margin-bottom: 0; border-radius: var(--radius-sm); }
+    .messages-list { max-height: calc(100vh - 230px); max-height: calc(100dvh - 230px); }
+    /* user table – hide email column on small screens */
+    .users-table th:nth-child(2),
+    .users-table td:nth-child(2) { display: none; }
 }
 
 @media (max-width: 380px) {
     .reps-number { font-size: 2rem; }
-    .tab-btn { padding: 0.65rem 0.85rem; font-size: 0.72rem; }
+    .tab-btn { padding: 0.5rem 0.65rem; font-size: 0.68rem; }
+    .tab-btn .tab-icon { font-size: 1.1rem; }
+    .navbar-sport-badge { display: none; }
 }
 
 /* Cache les éléments admin par défaut */

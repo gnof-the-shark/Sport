@@ -58,7 +58,18 @@ class AdminPanel {
                 tdReps.textContent = u.totalReps || 0;
 
                 const tdAction = document.createElement("td");
-                tdAction.textContent = "–";
+                // Admins and the current user cannot be deleted here
+                if (!isUserAdmin && doc.id !== currentUid) {
+                    const btn = document.createElement("button");
+                    btn.className = "btn btn-danger btn-sm";
+                    btn.textContent = "Supprimer";
+                    const uid        = doc.id;
+                    const name       = u.displayName || u.email;
+                    btn.onclick = () => window.adminDeleteUser(uid, name, btn);
+                    tdAction.appendChild(btn);
+                } else {
+                    tdAction.textContent = "–";
+                }
 
                 tr.appendChild(tdName);
                 tr.appendChild(tdEmail);
