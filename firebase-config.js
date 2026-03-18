@@ -1,26 +1,21 @@
-// firebase-config.js
-// Replace the placeholder values below with your actual Firebase project credentials.
-// To get these values:
-//   1. Go to https://console.firebase.google.com
-//   2. Create (or open) your project
-//   3. Project Settings → General → Your apps → Web app → firebaseConfig
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCT1SUk76IeBXkCbSSvbX4S-9sWQm8jQUU",
+  authDomain: "project-83ac5791-18d5-4b8d-9d0.firebaseapp.com",
+  projectId: "project-83ac5791-18d5-4b8d-9d0",
+  storageBucket: "project-83ac5791-18d5-4b8d-9d0.firebasestorage.app",
+  messagingSenderId: "505689731152",
+  appId: "1:505689731152:web:e0ebc30028f6259e7ce155",
+  measurementId: "G-0G99G1NCKQ"
 };
 
-// Admin email – only this address will have admin privileges.
-// Change this to your own email address.
-const ADMIN_EMAIL = "your-admin-email@example.com";
-
-// Initialize Firebase (compat mode – available as global `firebase` object)
-firebase.initializeApp(firebaseConfig);
-
-// Global references used across all scripts
-const auth = firebase.auth();
-const db   = firebase.firestore();
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
