@@ -9,6 +9,11 @@ const SPORTS = {
     "custom":   { label: "Sport",      icon: "⭐", unit: "reps" }
 };
 
+const MAX_STREAK_DAYS = 365; // look-back limit for streak calculation
+const MS_PER_HOUR     = 3600000;
+const MS_PER_MINUTE   = 60000;
+const MS_PER_SECOND   = 1000;
+
 let currentUser = null;
 let isAdmin = false;
 let currentSport = "sit-ups";
@@ -36,8 +41,9 @@ async function onUserSignedIn() {
     document.getElementById("app-screen").classList.remove("hidden");
 
     if (isAdmin) {
+        // admin-badge uses "hidden"; admin-tab-btn uses "admin-only" — remove the right class
         document.getElementById("admin-badge").classList.remove("hidden");
-        document.getElementById("admin-tab-btn").classList.remove("hidden");
+        document.getElementById("admin-tab-btn").classList.remove("admin-only");
         adminPanel = new AdminPanel(db, auth, ADMIN_EMAIL, showToast, updateSportUI, loadAdminStats);
     }
 
@@ -79,12 +85,14 @@ function updateSportUI(sportKey) {
 }
 
 function showTab(tabName) {
+    // Non-admins cannot access the admin tab
+    if (tabName === "admin" && !isAdmin) return;
     document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
     document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
     document.getElementById("tab-" + tabName).classList.remove("hidden");
     const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
     if (activeBtn) activeBtn.classList.add("active");
-    if (tabName === "admin" && isAdmin) loadAdminStats();
+    if (tabName === "admin") loadAdminStats();
 }
 
 async function loadDashboard() {
@@ -114,7 +122,7 @@ async function loadDashboard() {
     // Streak (consecutive days with at least one workout)
     let streak = 0;
     const startOffset = byDate[today] ? 0 : 1;
-    for (let i = startOffset; i < 365; i++) {
+    for (let i = startOffset; i < MAX_STREAK_DAYS; i++) {
         const dd = new Date();
         dd.setDate(dd.getDate() - i);
         const ds = dd.toISOString().slice(0, 10);
@@ -222,7 +230,7 @@ function subscribeLeaderboard() {
 
                 const badge = document.createElement("div");
                 badge.className = "rank-badge";
-                badge.textContent = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "��" : "#" + (i + 1);
+                badge.textContent = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "#" + (i + 1);
 
                 const info = document.createElement("div");
                 info.className = "leaderboard-info";
@@ -421,9 +429,9 @@ function subscribeCompetition() {
                     compTimerInterval = null;
                     return;
                 }
-                const h = Math.floor(diff / 3600000);
-                const m = Math.floor((diff % 3600000) / 60000);
-                const s = Math.floor((diff % 60000) / 1000);
+                const h = Math.floor(diff / MS_PER_HOUR);
+                const m = Math.floor((diff % MS_PER_HOUR) / MS_PER_MINUTE);
+                const s = Math.floor((diff % MS_PER_MINUTE) / MS_PER_SECOND);
                 document.getElementById("comp-timer").textContent =
                     String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
             }
