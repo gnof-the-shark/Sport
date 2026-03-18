@@ -9,8 +9,15 @@ const SPORTS = {
     "custom":   { label: "Sport",      icon: "⭐", unit: "reps" }
 };
 
-const MAX_STREAK_DAYS = 365; // look-back limit for streak calculation
-const MAX_MESSAGES    = 50;  // maximum messages loaded in the chat
+const MAX_STREAK_DAYS    = 365; // look-back limit for streak calculation
+const MAX_MESSAGES       = 50;  // maximum messages loaded in the chat
+const MAX_MESSAGE_LENGTH = 300; // character limit for chat messages
+
+const EMOJI_LIST = [
+    "😀","😂","😍","🤩","😎","🥳","😅","🤔","😮","😢",
+    "👍","👎","❤️","🔥","💪","🎉","🏆","⚡","🙏","👏",
+    "😡","🤣","😊","😏","🥴","🤦","🙈","💀","✅","❌"
+];
 
 let currentUser = null;
 let isAdmin = false;
@@ -24,6 +31,7 @@ let unsubMySessions = null;
 let unsubCompetition = null;
 let unsubMessages = null;
 let compTimerInterval = null;
+let activeEmojiPicker = null;
 
 auth.onAuthStateChanged(async (user) => {
     if (user) {
@@ -470,9 +478,10 @@ function subscribeMessages() {
                 return;
             }
             snap.forEach(doc => {
-                const d     = doc.data();
-                const name  = d.displayName || "?";
-                const isOwn = d.userId === currentUser.uid;
+                const d         = doc.data();
+                const name      = d.displayName || "?";
+                const isOwn     = d.userId === currentUser.uid;
+                const canModify = isOwn || isAdmin;
 
                 const li = document.createElement("li");
                 li.className = "message-item" + (isOwn ? " message-own" : "");
@@ -506,9 +515,64 @@ function subscribeMessages() {
                 const textEl = document.createElement("div");
                 textEl.className = "message-text";
                 textEl.textContent = d.text;
+                if (d.editedAt) {
+                    const editedSpan = document.createElement("span");
+                    editedSpan.className = "message-edited";
+                    editedSpan.textContent = " (modifié)";
+                    const editedTs = d.editedAt.toDate ? d.editedAt.toDate() : new Date(d.editedAt);
+                    editedSpan.title = "Modifié le " + editedTs.toLocaleString("fr-FR");
+                    editedSpan.setAttribute("aria-label", "Message modifié");
+                    textEl.appendChild(editedSpan);
+                }
+
+                // Reactions row
+                const reactionsEl = document.createElement("div");
+                reactionsEl.className = "message-reactions";
+                if (d.reactions) {
+                    Object.entries(d.reactions).forEach(([emoji, uids]) => {
+                        if (!Array.isArray(uids) || uids.length === 0) return;
+                        const reacted = uids.includes(currentUser.uid);
+                        const btn = document.createElement("button");
+                        btn.className = "reaction-btn" + (reacted ? " reaction-own" : "");
+                        btn.textContent = emoji + " " + uids.length;
+                        btn.title = reacted ? "Retirer la réaction" : "Réagir";
+                        btn.setAttribute("aria-label", emoji + " " + uids.length + (reacted ? " – retirer" : " – réagir"));
+                        btn.onclick = () => toggleReaction(doc.id, emoji);
+                        reactionsEl.appendChild(btn);
+                    });
+                }
+
+                // Action buttons row
+                const actionsEl = document.createElement("div");
+                actionsEl.className = "message-actions";
+
+                const emojiBtn = document.createElement("button");
+                emojiBtn.className = "msg-action-btn";
+                emojiBtn.title = "Réagir avec un emoji";
+                emojiBtn.textContent = "😊";
+                emojiBtn.onclick = (e) => showEmojiPicker(e, doc.id, emojiBtn);
+                actionsEl.appendChild(emojiBtn);
+
+                if (canModify) {
+                    const editBtn = document.createElement("button");
+                    editBtn.className = "msg-action-btn";
+                    editBtn.title = "Modifier";
+                    editBtn.textContent = "✏️";
+                    editBtn.onclick = () => startEditMessage(li, doc.id, d.text, textEl);
+                    actionsEl.appendChild(editBtn);
+
+                    const delBtn = document.createElement("button");
+                    delBtn.className = "msg-action-btn";
+                    delBtn.title = "Supprimer";
+                    delBtn.textContent = "🗑️";
+                    delBtn.onclick = () => deleteMessage(doc.id);
+                    actionsEl.appendChild(delBtn);
+                }
 
                 content.appendChild(header);
                 content.appendChild(textEl);
+                content.appendChild(reactionsEl);
+                content.appendChild(actionsEl);
 
                 if (isOwn) {
                     li.appendChild(content);
@@ -524,6 +588,123 @@ function subscribeMessages() {
             console.error("Messages listener error:", err);
             showToast("Erreur de chargement des messages", "error");
         });
+}
+
+// ── Emoji picker ──────────────────────────────────────────────────────────────
+function showEmojiPicker(event, docId, anchorBtn) {
+    event.stopPropagation();
+    if (activeEmojiPicker) {
+        activeEmojiPicker.remove();
+        activeEmojiPicker = null;
+        return;
+    }
+
+    const picker = document.createElement("div");
+    picker.className = "emoji-picker";
+    EMOJI_LIST.forEach(emoji => {
+        const btn = document.createElement("button");
+        btn.className = "emoji-option";
+        btn.textContent = emoji;
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            toggleReaction(docId, emoji);
+            picker.remove();
+            activeEmojiPicker = null;
+        };
+        picker.appendChild(btn);
+    });
+
+    document.body.appendChild(picker);
+    activeEmojiPicker = picker;
+
+    const rect        = anchorBtn.getBoundingClientRect();
+    const pickerWidth = picker.offsetWidth || 250;
+    picker.style.top  = (rect.bottom + 6) + "px";
+    picker.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - pickerWidth - 8)) + "px";
+
+    const closePicker = () => {
+        picker.remove();
+        activeEmojiPicker = null;
+        document.removeEventListener("click", closePicker);
+    };
+    setTimeout(() => document.addEventListener("click", closePicker), 0);
+}
+
+async function toggleReaction(docId, emoji) {
+    try {
+        const docRef = db.collection("messages").doc(docId);
+        const snap   = await docRef.get();
+        if (!snap.exists) return;
+        const uid  = currentUser.uid;
+        const uids = ((snap.data().reactions || {})[emoji]) || [];
+        const op   = uids.includes(uid)
+            ? firebase.firestore.FieldValue.arrayRemove(uid)
+            : firebase.firestore.FieldValue.arrayUnion(uid);
+        await docRef.update({ [`reactions.${emoji}`]: op });
+    } catch (err) {
+        console.error("toggleReaction error:", err);
+        showToast("Erreur lors de la réaction", "error");
+    }
+}
+
+function startEditMessage(li, docId, currentText, textEl) {
+    if (li.querySelector(".message-edit-input")) return; // already editing
+
+    const editInput = document.createElement("input");
+    editInput.className = "form-control message-edit-input";
+    editInput.value = currentText;
+    editInput.maxLength = MAX_MESSAGE_LENGTH;
+
+    const editActions = document.createElement("div");
+    editActions.className = "message-edit-actions";
+
+    const saveBtn = document.createElement("button");
+    saveBtn.className = "btn btn-primary btn-sm";
+    saveBtn.textContent = "Sauvegarder";
+    saveBtn.onclick = async () => {
+        const newText = editInput.value.trim();
+        if (!newText) return;
+        saveBtn.disabled = true;
+        await saveMessageEdit(docId, newText);
+    };
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.className = "btn btn-secondary btn-sm";
+    cancelBtn.textContent = "Annuler";
+    cancelBtn.onclick = () => {
+        editInput.replaceWith(textEl);
+        editActions.remove();
+    };
+
+    editActions.appendChild(saveBtn);
+    editActions.appendChild(cancelBtn);
+
+    textEl.replaceWith(editInput);
+    editInput.insertAdjacentElement("afterend", editActions);
+    editInput.focus();
+    editInput.select();
+}
+
+async function saveMessageEdit(docId, newText) {
+    try {
+        await db.collection("messages").doc(docId).update({
+            text:     newText,
+            editedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    } catch (err) {
+        console.error("saveMessageEdit error:", err);
+        showToast("Erreur lors de la modification", "error");
+    }
+}
+
+async function deleteMessage(docId) {
+    if (!confirm("Supprimer ce message ?")) return;
+    try {
+        await db.collection("messages").doc(docId).delete();
+    } catch (err) {
+        console.error("deleteMessage error:", err);
+        showToast("Erreur lors de la suppression", "error");
+    }
 }
 
 async function loadAdminStats() {
