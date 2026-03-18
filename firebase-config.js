@@ -1,11 +1,4 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Configuration de votre projet Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyCT1SUk76IeBXkCbSSvbX4S-9sWQm8jQUU",
   authDomain: "project-83ac5791-18d5-4b8d-9d0.firebaseapp.com",
@@ -16,6 +9,13 @@ const firebaseConfig = {
   measurementId: "G-0G99G1NCKQ"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+// Initialisation de Firebase (Version Compat pour navigateur)
+firebase.initializeApp(firebaseConfig);
+
+// Rendre les services accessibles aux autres fichiers (app.js, admin.js)
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+// --- CONFIGURATION ADMIN ---
+// REMPLACEZ CECI par votre email pour avoir les accès de gestion
+const ADMIN_EMAIL = "christophewhite14@gmail.com";
