@@ -8,9 +8,6 @@
 </head>
 <body>
 
-<!-- ============================
-     AUTH SCREEN
-============================= -->
 <div id="auth-screen">
     <div class="auth-box">
         <div class="auth-logo">
@@ -19,31 +16,25 @@
             <p>Suivez vos performances sportives</p>
         </div>
 
-        <!-- Tabs -->
         <div class="auth-tabs">
-            <button class="auth-tab active" id="tab-login"    onclick="switchAuthTab('login')">Connexion</button>
-            <button class="auth-tab"        id="tab-register" onclick="switchAuthTab('register')">Inscription</button>
+            <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Connexion</button>
+            <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Inscription</button>
         </div>
 
-        <!-- Error message -->
         <div id="auth-error" class="auth-error hidden"></div>
 
-        <!-- Login Form -->
         <form id="login-form" onsubmit="handleLogin(event)">
             <div class="form-group">
                 <label for="login-email">Adresse e-mail</label>
-                <input id="login-email" class="form-control" type="email" placeholder="vous@exemple.com" autocomplete="email" required />
+                <input id="login-email" class="form-control" type="email" placeholder="vous@exemple.com" required />
             </div>
             <div class="form-group">
                 <label for="login-password">Mot de passe</label>
-                <input id="login-password" class="form-control" type="password" placeholder="••••••••" autocomplete="current-password" required />
+                <input id="login-password" class="form-control" type="password" placeholder="••••••••" required />
             </div>
-            <button type="submit" class="btn btn-primary btn-full" id="login-btn">
-                Se connecter
-            </button>
+            <button type="submit" class="btn btn-primary btn-full">Se connecter</button>
         </form>
 
-        <!-- Register Form -->
         <form id="register-form" class="hidden" onsubmit="handleRegister(event)">
             <div class="form-group">
                 <label for="reg-name">Pseudo</label>
@@ -51,363 +42,67 @@
             </div>
             <div class="form-group">
                 <label for="reg-email">Adresse e-mail</label>
-                <input id="reg-email" class="form-control" type="email" placeholder="vous@exemple.com" autocomplete="email" required />
+                <input id="reg-email" class="form-control" type="email" placeholder="vous@exemple.com" required />
             </div>
             <div class="form-group">
                 <label for="reg-password">Mot de passe</label>
-                <input id="reg-password" class="form-control" type="password" placeholder="Min. 6 caractères" autocomplete="new-password" required minlength="6" />
+                <input id="reg-password" class="form-control" type="password" minlength="6" required />
             </div>
-            <button type="submit" class="btn btn-primary btn-full" id="register-btn">
-                Créer un compte
-            </button>
+            <button type="submit" class="btn btn-primary btn-full">Créer un compte</button>
         </form>
 
-        <!-- Google Sign-In -->
         <div class="divider">ou</div>
-        <button class="btn btn-google btn-full" onclick="handleGoogleSignIn()">
-            <svg width="18" height="18" viewBox="0 0 48 48" style="flex-shrink:0">
-                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.29-8.16 2.29-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-                <path fill="none" d="M0 0h48v48H0z"/>
-            </svg>
-            Continuer avec Google
-        </button>
+        <button class="btn btn-google btn-full" onclick="handleGoogleSignIn()">Continuer avec Google</button>
     </div>
 </div>
 
-<!-- ============================
-     APP SCREEN
-============================= -->
 <div id="app-screen" class="hidden">
-
-    <!-- Navbar -->
     <nav class="navbar">
-        <a href="#" class="navbar-brand">
-            <span class="brand-icon" id="nav-sport-icon">🏋️</span>
-            Sport Tracker
-        </a>
+        <div class="navbar-brand">
+            <span class="brand-icon" id="nav-sport-icon">🏋️</span> Sport Tracker
+        </div>
         <div class="navbar-right">
             <span class="navbar-sport-badge" id="nav-sport-name">Sit-ups</span>
-            <span class="admin-badge hidden" id="admin-badge">ADMIN</span>
-            <div class="user-avatar" id="user-avatar" title="Votre compte">?</div>
-            <button class="btn btn-secondary btn-sm" onclick="handleLogout()">⏏ Déco</button>
+            <span class="admin-badge admin-only" id="admin-badge">ADMIN</span>
+            <div class="user-avatar" id="user-avatar">?</div>
+            <button class="btn btn-secondary btn-sm" onclick="handleLogout()">Déco</button>
         </div>
     </nav>
 
-    <!-- Tab Navigation -->
     <div class="tab-nav">
-        <button class="tab-btn active" data-tab="dashboard" onclick="showTab('dashboard')">
-            <span class="tab-icon">📊</span>Dashboard
-        </button>
-        <button class="tab-btn" data-tab="log" onclick="showTab('log')">
-            <span class="tab-icon">➕</span>Enregistrer
-        </button>
-        <button class="tab-btn" data-tab="leaderboard" onclick="showTab('leaderboard')">
-            <span class="tab-icon">🏆</span>Classement
-        </button>
-        <button class="tab-btn" data-tab="feed" onclick="showTab('feed')">
-            <span class="tab-icon">🔄</span>Communauté
-        </button>
-        <button class="tab-btn hidden" data-tab="admin" id="admin-tab-btn" onclick="showTab('admin')">
-            <span class="tab-icon">⚙️</span>Admin
-        </button>
+        <button class="tab-btn active" onclick="showTab('dashboard')">📊 Dashboard</button>
+        <button class="tab-btn" onclick="showTab('log')">➕ Enregistrer</button>
+        <button class="tab-btn" onclick="showTab('leaderboard')">🏆 Classement</button>
+        <button class="tab-btn" onclick="showTab('feed')">🔄 Communauté</button>
+        <button class="tab-btn admin-only" id="admin-tab-btn" onclick="showTab('admin')">⚙️ Admin</button>
     </div>
 
     <div class="main-content">
-
-        <!-- Competition Banner (shown when a competition is active) -->
-        <div id="competition-banner" class="competition-banner hidden">
-            <div>
-                <div class="comp-title" id="comp-title">🏆 Concours en cours</div>
-                <div class="comp-sub"  id="comp-sub">Participez dès maintenant !</div>
-            </div>
-            <div style="font-size:1.4rem;font-weight:800;" id="comp-timer">--:--:--</div>
-        </div>
-
-        <!-- ====== DASHBOARD TAB ====== -->
         <div id="tab-dashboard" class="tab-content">
             <div class="stats-grid">
-                <div class="stat-card">
-                    <span class="stat-icon">🔢</span>
-                    <div class="stat-value" id="stat-total">0</div>
-                    <div class="stat-label">Total <span id="stat-sport-label">sit-ups</span></div>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-icon">📅</span>
-                    <div class="stat-value" id="stat-today">0</div>
-                    <div class="stat-label">Aujourd'hui</div>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-icon">🔥</span>
-                    <div class="stat-value" id="stat-streak">0</div>
-                    <div class="stat-label">Jours consécutifs</div>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-icon">🏅</span>
-                    <div class="stat-value" id="stat-best">0</div>
-                    <div class="stat-label">Meilleur jour</div>
-                </div>
+                <div class="stat-card"><div class="stat-value" id="stat-total">0</div><div class="stat-label">Total</div></div>
+                <div class="stat-card"><div class="stat-value" id="stat-today">0</div><div class="stat-label">Aujourd'hui</div></div>
             </div>
+        </div>
 
-            <!-- Weekly Progress Chart -->
+        <div id="tab-admin" class="tab-content hidden admin-only">
             <div class="card">
-                <div class="card-title">📈 Activité des 7 derniers jours</div>
-                <div class="chart-container" id="weekly-chart">
-                    <!-- Bars injected by JS -->
+                <h2>Panneau d'administration</h2>
+                <div class="admin-grid">
+                    <button class="btn btn-danger" onclick="openModal('modal-reset')">Réinitialiser Scores</button>
+                    <button class="btn btn-primary" onclick="openModal('modal-sport')">Changer Sport</button>
                 </div>
             </div>
-
-            <!-- Personal Ranking -->
-            <div class="card">
-                <div class="card-title">📍 Votre position au classement</div>
-                <div id="my-rank-info" style="font-size:0.95rem; color:var(--text-muted);">Chargement…</div>
-            </div>
-        </div>
-
-        <!-- ====== LOG TAB ====== -->
-        <div id="tab-log" class="tab-content hidden">
-            <div class="card quick-log-card">
-                <div class="card-title">➕ Enregistrer une séance</div>
-                <div class="reps-input-wrapper">
-                    <button class="reps-btn" onclick="changeReps(-5)">−</button>
-                    <input class="reps-number" id="reps-input" type="number" value="10" min="1" max="9999" />
-                    <button class="reps-btn" onclick="changeReps(+5)">+</button>
-                </div>
-                <div class="form-group">
-                    <label for="log-note">Note (optionnelle)</label>
-                    <input id="log-note" class="form-control" type="text" placeholder="Ex: Matin, fatigue modérée…" maxlength="120" />
-                </div>
-                <button class="btn btn-primary btn-full" id="log-submit-btn" onclick="submitWorkout()">
-                    💾 Enregistrer
-                </button>
-            </div>
-
-            <div class="card">
-                <div class="card-title">📋 Mes dernières séances</div>
-                <ul class="feed-list" id="my-sessions-list">
-                    <li style="color:var(--text-muted);font-size:0.9rem;">Aucune séance enregistrée.</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- ====== LEADERBOARD TAB ====== -->
-        <div id="tab-leaderboard" class="tab-content hidden">
-            <div class="card">
-                <div class="card-title">🏆 Top 10 – <span id="lb-sport-name">Sit-ups</span></div>
-                <ul class="leaderboard-list" id="leaderboard-list">
-                    <li style="color:var(--text-muted);font-size:0.9rem;padding:0.5rem;">Chargement…</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- ====== FEED TAB ====== -->
-        <div id="tab-feed" class="tab-content hidden">
-            <div class="card">
-                <div class="card-title">🔄 Activité de la communauté</div>
-                <ul class="feed-list" id="community-feed">
-                    <li style="color:var(--text-muted);font-size:0.9rem;">Aucune activité récente.</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- ====== ADMIN TAB ====== -->
-        <div id="tab-admin" class="tab-content hidden">
-            <div class="card" style="border-left:4px solid var(--warning)">
-                <div class="card-title">⚙️ Panneau d'administration</div>
-                <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">
-                    Bienvenue, administrateur. Les actions ci-dessous affectent tous les utilisateurs de la plateforme.
-                </p>
-            </div>
-
-            <!-- Global Stats -->
-            <div class="card">
-                <div class="card-title">📊 Statistiques globales</div>
-                <div class="stats-grid" id="admin-stats-grid">
-                    <div class="stat-card">
-                        <span class="stat-icon">👥</span>
-                        <div class="stat-value" id="admin-stat-users">–</div>
-                        <div class="stat-label">Utilisateurs</div>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-icon">🔢</span>
-                        <div class="stat-value" id="admin-stat-total">–</div>
-                        <div class="stat-label">Total reps (tous)</div>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-icon">📅</span>
-                        <div class="stat-value" id="admin-stat-today">–</div>
-                        <div class="stat-label">Séances aujourd'hui</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Admin Actions -->
-            <div class="admin-grid">
-                <!-- Reset Scores -->
-                <div class="admin-action-card">
-                    <span class="admin-action-icon">🔄</span>
-                    <div class="admin-action-title">Réinitialiser les scores</div>
-                    <div class="admin-action-desc">Remet à zéro tous les compteurs de répétitions pour un nouveau départ.</div>
-                    <button class="btn btn-danger btn-full" onclick="openModal('modal-reset')">Réinitialiser</button>
-                </div>
-
-                <!-- New Competition -->
-                <div class="admin-action-card">
-                    <span class="admin-action-icon">🏆</span>
-                    <div class="admin-action-title">Lancer un concours</div>
-                    <div class="admin-action-desc">Créez un nouveau défi avec un nom, une date de début et une durée.</div>
-                    <button class="btn btn-success btn-full" onclick="openModal('modal-competition')">Lancer</button>
-                </div>
-
-                <!-- Change Sport -->
-                <div class="admin-action-card">
-                    <span class="admin-action-icon">🏅</span>
-                    <div class="admin-action-title">Changer de sport</div>
-                    <div class="admin-action-desc">Basculez vers un autre sport : pompes, squats, tractions, etc.</div>
-                    <button class="btn btn-primary btn-full" onclick="openModal('modal-sport')">Changer</button>
-                </div>
-
-                <!-- Manage Users -->
-                <div class="admin-action-card">
-                    <span class="admin-action-icon">👥</span>
-                    <div class="admin-action-title">Gérer les utilisateurs</div>
-                    <div class="admin-action-desc">Consultez la liste des participants et modifiez leurs statuts.</div>
-                    <button class="btn btn-secondary btn-full" onclick="openModal('modal-users')">Gérer</button>
-                </div>
-            </div>
-        </div>
-
-    </div><!-- /main-content -->
-</div><!-- /app-screen -->
-
-<!-- ============================
-     MODALS
-============================= -->
-
-<!-- Reset Scores Modal -->
-<div id="modal-reset" class="modal-overlay hidden">
-    <div class="modal">
-        <div class="modal-header">
-            <span class="modal-title">🔄 Réinitialiser tous les scores</span>
-            <button class="modal-close" onclick="closeModal('modal-reset')">✕</button>
-        </div>
-        <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem;">
-            ⚠️ Cette action est irréversible. Tous les scores des utilisateurs seront remis à zéro.
-        </p>
-        <div class="form-group">
-            <label>Tapez <strong>RESET</strong> pour confirmer</label>
-            <input id="reset-confirm-input" class="form-control" type="text" placeholder="RESET" />
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeModal('modal-reset')">Annuler</button>
-            <button class="btn btn-danger" onclick="adminResetScores()">Confirmer la réinitialisation</button>
         </div>
     </div>
 </div>
 
-<!-- New Competition Modal -->
-<div id="modal-competition" class="modal-overlay hidden">
-    <div class="modal">
-        <div class="modal-header">
-            <span class="modal-title">🏆 Nouveau concours</span>
-            <button class="modal-close" onclick="closeModal('modal-competition')">✕</button>
-        </div>
-        <div class="form-group">
-            <label for="comp-name-input">Nom du concours</label>
-            <input id="comp-name-input" class="form-control" type="text" placeholder="Ex: Défi Juillet 2025" />
-        </div>
-        <div class="form-group">
-            <label for="comp-start-input">Date de début</label>
-            <input id="comp-start-input" class="form-control" type="datetime-local" />
-        </div>
-        <div class="form-group">
-            <label for="comp-duration-input">Durée (jours)</label>
-            <input id="comp-duration-input" class="form-control" type="number" value="7" min="1" max="365" />
-        </div>
-        <div class="form-group">
-            <label for="comp-desc-input">Description (optionnelle)</label>
-            <textarea id="comp-desc-input" class="form-control" rows="2" placeholder="Règles, objectif…"></textarea>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeModal('modal-competition')">Annuler</button>
-            <button class="btn btn-success" onclick="adminStartCompetition()">🚀 Lancer le concours</button>
-        </div>
-    </div>
-</div>
-
-<!-- Change Sport Modal -->
-<div id="modal-sport" class="modal-overlay hidden">
-    <div class="modal">
-        <div class="modal-header">
-            <span class="modal-title">🏅 Changer de sport</span>
-            <button class="modal-close" onclick="closeModal('modal-sport')">✕</button>
-        </div>
-        <div class="form-group">
-            <label for="sport-select">Sport</label>
-            <select id="sport-select" class="form-control">
-                <option value="sit-ups"   data-icon="🧘">Sit-ups (redressements assis)</option>
-                <option value="push-ups"  data-icon="💪">Push-ups (pompes)</option>
-                <option value="squats"    data-icon="🦵">Squats</option>
-                <option value="pull-ups"  data-icon="🏋️">Pull-ups (tractions)</option>
-                <option value="burpees"   data-icon="🔥">Burpees</option>
-                <option value="running"   data-icon="🏃">Course à pied (km)</option>
-                <option value="custom"    data-icon="⭐">Personnalisé…</option>
-            </select>
-        </div>
-        <div id="custom-sport-group" class="form-group hidden">
-            <label for="custom-sport-name">Nom du sport personnalisé</label>
-            <input id="custom-sport-name" class="form-control" type="text" placeholder="Ex: Jumping Jacks" />
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeModal('modal-sport')">Annuler</button>
-            <button class="btn btn-primary" onclick="adminChangeSport()">Changer</button>
-        </div>
-    </div>
-</div>
-
-<!-- Manage Users Modal -->
-<div id="modal-users" class="modal-overlay hidden">
-    <div class="modal" style="max-width:640px">
-        <div class="modal-header">
-            <span class="modal-title">👥 Gestion des utilisateurs</span>
-            <button class="modal-close" onclick="closeModal('modal-users')">✕</button>
-        </div>
-        <div style="overflow-x:auto">
-            <table class="users-table" id="users-table">
-                <thead>
-                    <tr>
-                        <th>Utilisateur</th>
-                        <th>E-mail</th>
-                        <th>Rôle</th>
-                        <th>Reps</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="users-table-body">
-                    <tr><td colspan="5" style="color:var(--text-muted);text-align:center;padding:1rem;">Chargement…</td></tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeModal('modal-users')">Fermer</button>
-        </div>
-    </div>
-</div>
-
-<!-- Toast Container -->
 <div id="toast-container"></div>
-
-<!-- Firebase SDKs (v9 compat mode) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<!-- App scripts (load order matters) -->
 <script src="firebase-config.js"></script>
 <script src="admin.js"></script>
 <script src="app.js"></script>
-
 </body>
 </html>
