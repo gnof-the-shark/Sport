@@ -36,6 +36,13 @@ Une application web complète pour suivre et partager vos performances sportives
 - Nom, sport, nombre de reps et heure de chaque séance
 - Notes personnelles visibles par la communauté
 
+### 💬 Messagerie communautaire
+- Messages en temps réel visibles par tous les membres
+- **Réactions emoji** sur chaque message (cliquez 😊 pour réagir)
+- **Modifier** son propre message (bouton ✏️, admin peut modifier tous)
+- **Supprimer** son propre message (bouton 🗑️, admin peut supprimer tous)
+- Indicateur « (modifié) » sur les messages édités
+
 ### ⚙️ Panneau Admin (administrateur uniquement)
 - **Réinitialiser tous les scores** : remet tous les compteurs à zéro (confirmation requise)
 - **Lancer un nouveau concours** : nom, date de début, durée, description
@@ -93,6 +100,23 @@ service cloud.firestore {
     match /workouts/{docId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // Messages: authenticated users can read all and create their own.
+    // Any authenticated user may update emoji reactions.
+    // Only the owner may update the text (edit) and delete their message.
+    match /messages/{docId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && (
+        // owner can update any field
+        resource.data.userId == request.auth.uid ||
+        // any authenticated user can update only the reactions map
+        // and the incoming reactions value must be a map (basic validation)
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']) &&
+         request.resource.data.reactions is map)
+      );
       allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 

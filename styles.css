@@ -521,6 +521,96 @@ select.form-control option { background: var(--bg-card); }
 }
 .message-form .form-control { flex: 1; margin-bottom: 0; }
 
+/* Message action buttons (edit / delete / emoji) */
+.message-actions {
+    display: flex;
+    gap: 2px;
+    margin-top: 0.35rem;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+.message-item:hover .message-actions { opacity: 1; }
+.msg-action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    line-height: 1;
+    transition: background 0.15s;
+}
+.msg-action-btn:hover { background: var(--bg-input); }
+
+/* Emoji picker panel */
+.emoji-picker {
+    position: fixed;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 2px;
+    z-index: 900;
+    box-shadow: var(--shadow);
+    max-width: 244px;
+}
+.emoji-option {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.15rem;
+    padding: 5px;
+    border-radius: 4px;
+    line-height: 1;
+    transition: background 0.1s;
+}
+.emoji-option:hover { background: var(--bg-input); }
+
+/* Emoji reactions */
+.message-reactions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 0.3rem;
+}
+.reaction-btn {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1px 8px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: background 0.15s;
+    line-height: 1.6;
+}
+.reaction-btn:hover { background: var(--border); }
+.reaction-btn.reaction-own {
+    background: rgba(108,99,255,0.15);
+    border-color: var(--primary);
+}
+
+/* Inline edit mode */
+.message-edit-input { margin-bottom: 0.3rem; }
+.message-edit-actions {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.3rem;
+}
+.btn-sm {
+    padding: 0.2rem 0.55rem;
+    font-size: 0.78rem;
+}
+
+/* "edited" indicator */
+.message-edited {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-left: 4px;
+}
+
 /* ---------- Admin Panel ---------- */
 .admin-grid {
     display: grid;
