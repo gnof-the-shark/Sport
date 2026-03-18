@@ -179,9 +179,9 @@
             <div class="card quick-log-card">
                 <div class="card-title">➕ Enregistrer une séance</div>
                 <div class="reps-input-wrapper">
-                    <button class="reps-btn" onclick="changeReps(-5)">−</button>
+                    <button class="reps-btn" onclick="changeReps(-1)">−</button>
                     <input class="reps-number" id="reps-input" type="number" value="10" min="1" max="9999" />
-                    <button class="reps-btn" onclick="changeReps(+5)">+</button>
+                    <button class="reps-btn" onclick="changeReps(+1)">+</button>
                 </div>
                 <div class="form-group">
                     <label for="log-note">Note (optionnelle)</label>
@@ -213,7 +213,7 @@
         <!-- ====== FEED TAB ====== -->
         <div id="tab-feed" class="tab-content hidden">
             <div class="card">
-                <div class="card-title">🔄 Activité de la communauté</div>
+                <div class="card-title">🔄 Activité des autres</div>
                 <ul class="feed-list" id="community-feed">
                     <li style="color:var(--text-muted);font-size:0.9rem;">Aucune activité récente.</li>
                 </ul>
@@ -403,7 +403,7 @@
                         <th>Utilisateur</th>
                         <th>E-mail</th>
                         <th>Rôle</th>
-                        <th>Reps</th>
+                        <th>Répétition</th>
                         <th>Action</th>
                     </tr>
                 </thead>
