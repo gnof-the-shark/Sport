@@ -10,6 +10,7 @@ const SPORTS = {
 };
 
 const MAX_STREAK_DAYS = 365; // look-back limit for streak calculation
+const MAX_MESSAGES    = 50;  // maximum messages loaded in the chat
 const MS_PER_HOUR     = 3600000;
 const MS_PER_MINUTE   = 60000;
 const MS_PER_SECOND   = 1000;
@@ -24,6 +25,7 @@ let unsubLeaderboard = null;
 let unsubFeed = null;
 let unsubMySessions = null;
 let unsubCompetition = null;
+let unsubMessages = null;
 let compTimerInterval = null;
 
 auth.onAuthStateChanged(async (user) => {
@@ -55,6 +57,7 @@ async function onUserSignedIn() {
     subscribeFeed();
     subscribeMySessionsList();
     subscribeCompetition();
+    subscribeMessages();
     await loadDashboard();
     showTab("dashboard");
 }
@@ -64,6 +67,7 @@ function onUserSignedOut() {
     if (unsubFeed)         { unsubFeed();          unsubFeed         = null; }
     if (unsubMySessions)   { unsubMySessions();    unsubMySessions   = null; }
     if (unsubCompetition)  { unsubCompetition();   unsubCompetition  = null; }
+    if (unsubMessages)     { unsubMessages();      unsubMessages     = null; }
     if (compTimerInterval) { clearInterval(compTimerInterval); compTimerInterval = null; }
     document.getElementById("app-screen").classList.add("hidden");
     document.getElementById("auth-screen").classList.remove("hidden");
@@ -442,6 +446,72 @@ function subscribeCompetition() {
         });
 }
 
+function subscribeMessages() {
+    unsubMessages = db.collection("messages").orderBy("timestamp", "asc").limit(MAX_MESSAGES)
+        .onSnapshot(snap => {
+            const list = document.getElementById("messages-list");
+            list.innerHTML = "";
+            if (snap.empty) {
+                const li = document.createElement("li");
+                li.style.cssText = "color:var(--text-muted);font-size:0.9rem;";
+                li.textContent = "Aucun message.";
+                list.appendChild(li);
+                return;
+            }
+            snap.forEach(doc => {
+                const d     = doc.data();
+                const name  = d.displayName || "?";
+                const isOwn = d.userId === currentUser.uid;
+
+                const li = document.createElement("li");
+                li.className = "message-item" + (isOwn ? " message-own" : "");
+
+                const avatar = document.createElement("div");
+                avatar.className = "feed-avatar";
+                avatar.textContent = name.charAt(0).toUpperCase();
+
+                const content = document.createElement("div");
+                content.className = "message-content";
+
+                const header = document.createElement("div");
+                header.className = "message-header";
+
+                const nameEl = document.createElement("span");
+                nameEl.className = "feed-name";
+                nameEl.textContent = name;
+
+                const timeEl = document.createElement("span");
+                timeEl.className = "feed-time";
+                if (d.timestamp) {
+                    const ts = d.timestamp.toDate ? d.timestamp.toDate() : new Date(d.timestamp);
+                    timeEl.textContent = formatTimeAgo(ts);
+                }
+
+                header.appendChild(nameEl);
+                header.appendChild(timeEl);
+
+                const textEl = document.createElement("div");
+                textEl.className = "message-text";
+                textEl.textContent = d.text;
+
+                content.appendChild(header);
+                content.appendChild(textEl);
+
+                if (isOwn) {
+                    li.appendChild(content);
+                    li.appendChild(avatar);
+                } else {
+                    li.appendChild(avatar);
+                    li.appendChild(content);
+                }
+                list.appendChild(li);
+            });
+            list.scrollTop = list.scrollHeight;
+        }, err => {
+            console.error("Messages listener error:", err);
+        });
+}
+
 async function loadAdminStats() {
     const today = new Date().toISOString().slice(0, 10);
     try {
@@ -555,6 +625,26 @@ window.handleGoogleSignIn = async () => {
 window.handleLogout = () => auth.signOut();
 window.showTab       = showTab;
 window.submitWorkout = submitWorkout;
+
+window.sendMessage = async (e) => {
+    e.preventDefault();
+    const input = document.getElementById("message-input");
+    const text  = input.value.trim();
+    if (!text) return;
+    input.value = "";
+    const name = currentUser.displayName || currentUser.email;
+    try {
+        await db.collection("messages").add({
+            userId:      currentUser.uid,
+            displayName: name,
+            text:        text,
+            timestamp:   firebase.firestore.FieldValue.serverTimestamp()
+        });
+    } catch (err) {
+        console.error("sendMessage error:", err);
+        showToast("Erreur lors de l'envoi du message", "error");
+    }
+};
 
 window.changeReps = (v) => {
     const i = document.getElementById("reps-input");
