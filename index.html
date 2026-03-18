@@ -86,13 +86,18 @@
     <nav class="navbar">
         <a href="#" class="navbar-brand">
             <span class="brand-icon" id="nav-sport-icon">🏋️</span>
-            Sport Tracker
+            <span class="brand-text">Sport Tracker</span>
         </a>
         <div class="navbar-right">
             <span class="navbar-sport-badge" id="nav-sport-name">Sit-ups</span>
             <span class="admin-badge hidden" id="admin-badge">ADMIN</span>
-            <div class="user-avatar" id="user-avatar" title="Votre compte">?</div>
-            <button class="btn btn-secondary btn-sm" onclick="handleLogout()">⏏ Déco</button>
+            <div class="user-menu-wrapper" id="user-menu-wrapper">
+                <div class="user-avatar" id="user-avatar" onclick="toggleUserMenu()" onkeydown="if(event.key==='Enter'||event.key===' '){toggleUserMenu();event.preventDefault();}" tabindex="0" role="button" aria-haspopup="true" title="Votre compte">?</div>
+                <div class="user-menu hidden" id="user-menu">
+                    <button class="user-menu-item" onclick="handleLogout()">⏏ Déconnexion</button>
+                    <button class="user-menu-item user-menu-danger" onclick="openModal('modal-delete-account'); closeUserMenu()">🗑️ Supprimer mon compte</button>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -411,6 +416,27 @@
             <button class="btn btn-secondary" onclick="closeModal('modal-users')">Fermer</button>
         </div>
     </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div id="modal-delete-account" class="modal-overlay hidden">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title">🗑️ Supprimer mon compte</span>
+            <button class="modal-close" onclick="closeModal('modal-delete-account')">✕</button>
+        </div>
+        <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem;">
+            ⚠️ Cette action est irréversible. Toutes vos données (séances, messages) seront supprimées définitivement.
+        </p>
+        <div class="form-group">
+            <label>Tapez <strong>SUPPRIMER</strong> pour confirmer</label>
+            <input id="delete-account-confirm" class="form-control" type="text" placeholder="SUPPRIMER" />
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('modal-delete-account')">Annuler</button>
+            <button class="btn btn-danger" onclick="handleDeleteAccount()">Supprimer mon compte</button>
+        </div>
+    </div>
 </div>
 
 <!-- Toast Container -->
