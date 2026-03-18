@@ -1,12 +1,12 @@
 // app.js – Main application logic
 const SPORTS = {
-    "sit-ups":  { label: "Sit-ups",    icon: "🧘", unit: "reps" },
-    "push-ups": { label: "Push-ups",   icon: "💪", unit: "reps" },
-    "squats":   { label: "Squats",     icon: "🦵", unit: "reps" },
-    "pull-ups": { label: "Pull-ups",   icon: "🏋️", unit: "reps" },
-    "burpees":  { label: "Burpees",    icon: "🔥", unit: "reps" },
+    "sit-ups":  { label: "Sit-ups",    icon: "🧘", unit: "redressements" },
+    "push-ups": { label: "Push-ups",   icon: "💪", unit: "pompes" },
+    "squats":   { label: "Squats",     icon: "🦵", unit: "squats" },
+    "pull-ups": { label: "Pull-ups",   icon: "🏋️", unit: "tractions" },
+    "burpees":  { label: "Burpees",    icon: "🔥", unit: "burpees" },
     "running":  { label: "Course",     icon: "🏃", unit: "km"   },
-    "custom":   { label: "Sport",      icon: "⭐", unit: "reps" }
+    "custom":   { label: "Sport",      icon: "⭐", unit: "répetitions" }
 };
 
 const MAX_STREAK_DAYS    = 365; // look-back limit for streak calculation
