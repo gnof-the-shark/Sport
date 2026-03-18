@@ -609,8 +609,17 @@ select.form-control option { background: var(--bg-card); }
 @media (max-width: 380px) {
     .reps-number { font-size: 2rem; }
     .tab-btn { padding: 0.65rem 0.85rem; font-size: 0.72rem; }
-}
-/* Cache tous les éléments marqués comme réservés à l'admin */
+/* Cache les éléments admin par défaut */
 .admin-only {
     display: none !important;
+}
+
+/* Classe utilitaire pour afficher en Flex si besoin */
+.admin-show-flex {
+    display: flex !important;
+}
+
+/* Classe utilitaire pour afficher en Block si besoin */
+.admin-show-block {
+    display: block !important;
 }
