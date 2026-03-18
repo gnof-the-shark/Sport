@@ -93,7 +93,6 @@
             <span class="admin-badge hidden" id="admin-badge">ADMIN</span>
             <div class="user-avatar" id="user-avatar" title="Votre compte">?</div>
             <button class="btn btn-secondary btn-sm" onclick="handleLogout()">⏏ Déco</button>
-            <span class="admin-badge admin-only" id="admin-badge">ADMIN</span>
         </div>
     </nav>
 
@@ -110,7 +109,7 @@
         </button>
         <button class="tab-btn" data-tab="feed" onclick="showTab('feed')">
             <span class="tab-icon">🔄</span>Communauté
-        </button>>
+        </button>
         <button class="tab-btn admin-only" data-tab="admin" id="admin-tab-btn" onclick="showTab('admin')">
             <span class="tab-icon">⚙️</span>Admin
         </button>
@@ -195,15 +194,15 @@
 
         <!-- ====== LEADERBOARD TAB ====== -->
         <div id="tab-leaderboard" class="tab-content hidden">
-        <div id="tab-admin" class="tab-content admin-only hidden">
-                <div class="card-title">🏆 Top 10 – <span id="lb-sport-name">Sit-ups</span></div>
-                <ul class="leaderboard-list" id="leaderboard-list">
-                    <li style="color:var(--text-muted);font-size:0.9rem;padding:0.5rem;">Chargement…</li>
-                </ul>
-            </div>
-        </div>
+            <div class="card">
+                <div class="card-title">🏆 Top 10 – <span id="lb-sport-name">Sit-ups</span></div>
+                <ul class="leaderboard-list" id="leaderboard-list">
+                    <li style="color:var(--text-muted);font-size:0.9rem;padding:0.5rem;">Chargement…</li>
+                </ul>
+            </div>
+        </div>
 
-        <!-- ====== FEED TAB ====== -->
+        <!-- ====== FEED TAB ====== -->
         <div id="tab-feed" class="tab-content hidden">
             <div class="card">
                 <div class="card-title">🔄 Activité de la communauté</div>
