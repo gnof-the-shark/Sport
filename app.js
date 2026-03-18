@@ -73,6 +73,8 @@ function showTab(tabName) {
     document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
     document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
     document.getElementById("tab-" + tabName).classList.remove("hidden");
+    const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+    if (activeBtn) activeBtn.classList.add("active");
     if (tabName === "admin" && isAdmin) loadAdminStats();
 }
 
@@ -96,9 +98,9 @@ async function submitWorkout() {
         dateStr: new Date().toISOString().slice(0, 10)
     });
 
-    await db.collection("users").doc(currentUser.uid).update({
+    await db.collection("users").doc(currentUser.uid).set({
         totalReps: firebase.firestore.FieldValue.increment(reps)
-    });
+    }, { merge: true });
 
     showToast("Séance enregistrée !", "success");
     loadDashboard();
@@ -151,8 +153,76 @@ function showToast(m, t) {
 window.switchAuthTab = (t) => {
     document.getElementById("login-form").classList.toggle("hidden", t !== 'login');
     document.getElementById("register-form").classList.toggle("hidden", t !== 'register');
+    document.querySelectorAll(".auth-tab").forEach(btn => btn.classList.remove("active"));
+    document.getElementById("tab-" + t).classList.add("active");
 };
-window.handleLogin = (e) => { e.preventDefault(); /* ... */ };
+
+window.handleLogin = async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
+    const errEl = document.getElementById("auth-error");
+    const btn = document.getElementById("login-btn");
+    errEl.classList.add("hidden");
+    btn.disabled = true;
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+    } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.remove("hidden");
+    } finally {
+        btn.disabled = false;
+    }
+};
+
+window.handleRegister = async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("reg-name").value.trim();
+    const email = document.getElementById("reg-email").value;
+    const password = document.getElementById("reg-password").value;
+    const errEl = document.getElementById("auth-error");
+    const btn = document.getElementById("register-btn");
+    errEl.classList.add("hidden");
+    btn.disabled = true;
+    try {
+        const cred = await auth.createUserWithEmailAndPassword(email, password);
+        await cred.user.updateProfile({ displayName: name });
+        await db.collection("users").doc(cred.user.uid).set({
+            displayName: name,
+            email: email,
+            totalReps: 0,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.remove("hidden");
+    } finally {
+        btn.disabled = false;
+    }
+};
+
+window.handleGoogleSignIn = async () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const errEl = document.getElementById("auth-error");
+    errEl.classList.add("hidden");
+    try {
+        const cred = await auth.signInWithPopup(provider);
+        const user = cred.user;
+        const userDoc = await db.collection("users").doc(user.uid).get();
+        if (!userDoc.exists) {
+            await db.collection("users").doc(user.uid).set({
+                displayName: user.displayName || user.email,
+                email: user.email,
+                totalReps: 0,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+    } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.remove("hidden");
+    }
+};
+
 window.handleLogout = () => auth.signOut();
 window.showTab = showTab;
 window.submitWorkout = submitWorkout;
@@ -160,3 +230,48 @@ window.changeReps = (v) => {
     const i = document.getElementById("reps-input");
     i.value = Math.max(1, parseInt(i.value) + v);
 };
+
+window.openModal = (id) => document.getElementById(id).classList.remove("hidden");
+window.closeModal = (id) => document.getElementById(id).classList.add("hidden");
+
+window.adminResetScores = async () => {
+    const input = document.getElementById("reset-confirm-input").value;
+    if (input !== "RESET") { showToast("Tapez RESET pour confirmer", "error"); return; }
+    await adminPanel.resetScores();
+    closeModal("modal-reset");
+    document.getElementById("reset-confirm-input").value = "";
+};
+
+window.adminStartCompetition = async () => {
+    const name = document.getElementById("comp-name-input").value.trim();
+    const start = document.getElementById("comp-start-input").value;
+    const duration = parseInt(document.getElementById("comp-duration-input").value);
+    const desc = document.getElementById("comp-desc-input").value.trim();
+    if (!name || !start || !duration) { showToast("Veuillez remplir tous les champs obligatoires", "error"); return; }
+    const startDate = new Date(start);
+    const endDate = new Date(startDate.getTime() + duration * 86400000);
+    await db.collection("settings").doc("competition").set({
+        name,
+        description: desc,
+        startDate: firebase.firestore.Timestamp.fromDate(startDate),
+        endDate: firebase.firestore.Timestamp.fromDate(endDate),
+        active: true
+    });
+    showToast("Concours lancé !", "success");
+    closeModal("modal-competition");
+};
+
+window.adminChangeSport = async () => {
+    const sportKey = document.getElementById("sport-select").value;
+    const customName = sportKey === "custom" ? document.getElementById("custom-sport-name").value.trim() : "";
+    if (sportKey === "custom" && !customName) { showToast("Entrez un nom pour le sport personnalisé", "error"); return; }
+    await adminPanel.changeSport(sportKey, customName);
+    closeModal("modal-sport");
+};
+
+const sportSelect = document.getElementById("sport-select");
+if (sportSelect) {
+    sportSelect.addEventListener("change", (e) => {
+        document.getElementById("custom-sport-group").classList.toggle("hidden", e.target.value !== "custom");
+    });
+}
