@@ -610,3 +610,7 @@ select.form-control option { background: var(--bg-card); }
     .reps-number { font-size: 2rem; }
     .tab-btn { padding: 0.65rem 0.85rem; font-size: 0.72rem; }
 }
+/* Cache tous les éléments marqués comme réservés à l'admin */
+.admin-only {
+    display: none !important;
+}
