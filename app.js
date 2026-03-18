@@ -10,9 +10,7 @@ const SPORTS = {
 };
 
 const MAX_STREAK_DAYS = 365; // look-back limit for streak calculation
-const MS_PER_HOUR     = 3600000;
-const MS_PER_MINUTE   = 60000;
-const MS_PER_SECOND   = 1000;
+const MAX_MESSAGES    = 50;  // maximum messages loaded in the chat
 
 let currentUser = null;
 let isAdmin = false;
@@ -24,6 +22,7 @@ let unsubLeaderboard = null;
 let unsubFeed = null;
 let unsubMySessions = null;
 let unsubCompetition = null;
+let unsubMessages = null;
 let compTimerInterval = null;
 
 auth.onAuthStateChanged(async (user) => {
@@ -55,6 +54,7 @@ async function onUserSignedIn() {
     subscribeFeed();
     subscribeMySessionsList();
     subscribeCompetition();
+    subscribeMessages();
     await loadDashboard();
     showTab("dashboard");
 }
@@ -64,6 +64,7 @@ function onUserSignedOut() {
     if (unsubFeed)         { unsubFeed();          unsubFeed         = null; }
     if (unsubMySessions)   { unsubMySessions();    unsubMySessions   = null; }
     if (unsubCompetition)  { unsubCompetition();   unsubCompetition  = null; }
+    if (unsubMessages)     { unsubMessages();      unsubMessages     = null; }
     if (compTimerInterval) { clearInterval(compTimerInterval); compTimerInterval = null; }
     document.getElementById("app-screen").classList.add("hidden");
     document.getElementById("auth-screen").classList.remove("hidden");
@@ -410,9 +411,17 @@ function subscribeCompetition() {
             }
 
             const comp    = snap.data();
-            const endDate = comp.endDate && comp.endDate.toDate ? comp.endDate.toDate() : new Date(comp.endDate);
+            const rawEnd  = comp.endDate;
+            let endDate;
+            if (rawEnd && typeof rawEnd.toDate === "function") {
+                endDate = rawEnd.toDate();
+            } else if (rawEnd && typeof rawEnd.seconds === "number") {
+                endDate = new Date(rawEnd.seconds * 1000 + Math.floor((rawEnd.nanoseconds || 0) / 1e6));
+            } else {
+                endDate = new Date(rawEnd);
+            }
 
-            if (endDate <= new Date()) {
+            if (!endDate || isNaN(endDate.getTime()) || endDate <= new Date()) {
                 banner.classList.add("hidden");
                 return;
             }
@@ -422,23 +431,95 @@ function subscribeCompetition() {
             document.getElementById("comp-sub").textContent   = comp.description || "Participez dès maintenant !";
 
             function updateTimer() {
-                const diff = endDate - new Date();
+                const diff = endDate.getTime() - Date.now();
                 if (diff <= 0) {
                     document.getElementById("comp-timer").textContent = "Terminé";
-                    clearInterval(compTimerInterval);
-                    compTimerInterval = null;
+                    if (compTimerInterval) { clearInterval(compTimerInterval); compTimerInterval = null; }
                     return;
                 }
-                const h = Math.floor(diff / MS_PER_HOUR);
-                const m = Math.floor((diff % MS_PER_HOUR) / MS_PER_MINUTE);
-                const s = Math.floor((diff % MS_PER_MINUTE) / MS_PER_SECOND);
+                const totalSec = Math.floor(diff / 1000);
+                const d = Math.floor(totalSec / 86400);
+                const h = Math.floor((totalSec % 86400) / 3600);
+                const m = Math.floor((totalSec % 3600) / 60);
+                const s = totalSec % 60;
+                const hh = String(h).padStart(2, "0");
+                const mm = String(m).padStart(2, "0");
+                const ss = String(s).padStart(2, "0");
                 document.getElementById("comp-timer").textContent =
-                    String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+                    d > 0 ? d + "j " + hh + ":" + mm + ":" + ss : hh + ":" + mm + ":" + ss;
             }
             updateTimer();
-            compTimerInterval = setInterval(updateTimer, 1000);
+            if (endDate > new Date()) {
+                compTimerInterval = setInterval(updateTimer, 1000);
+            }
         }, err => {
             console.error("Competition listener error:", err);
+        });
+}
+
+function subscribeMessages() {
+    unsubMessages = db.collection("messages").orderBy("timestamp", "asc").limit(MAX_MESSAGES)
+        .onSnapshot(snap => {
+            const list = document.getElementById("messages-list");
+            list.innerHTML = "";
+            if (snap.empty) {
+                const li = document.createElement("li");
+                li.style.cssText = "color:var(--text-muted);font-size:0.9rem;";
+                li.textContent = "Aucun message.";
+                list.appendChild(li);
+                return;
+            }
+            snap.forEach(doc => {
+                const d     = doc.data();
+                const name  = d.displayName || "?";
+                const isOwn = d.userId === currentUser.uid;
+
+                const li = document.createElement("li");
+                li.className = "message-item" + (isOwn ? " message-own" : "");
+
+                const avatar = document.createElement("div");
+                avatar.className = "feed-avatar";
+                avatar.textContent = name.charAt(0).toUpperCase();
+
+                const content = document.createElement("div");
+                content.className = "message-content";
+
+                const header = document.createElement("div");
+                header.className = "message-header";
+
+                const nameEl = document.createElement("span");
+                nameEl.className = "feed-name";
+                nameEl.textContent = name;
+
+                const timeEl = document.createElement("span");
+                timeEl.className = "feed-time";
+                if (d.timestamp) {
+                    const ts = d.timestamp.toDate ? d.timestamp.toDate() : new Date(d.timestamp);
+                    timeEl.textContent = formatTimeAgo(ts);
+                }
+
+                header.appendChild(nameEl);
+                header.appendChild(timeEl);
+
+                const textEl = document.createElement("div");
+                textEl.className = "message-text";
+                textEl.textContent = d.text;
+
+                content.appendChild(header);
+                content.appendChild(textEl);
+
+                if (isOwn) {
+                    li.appendChild(content);
+                    li.appendChild(avatar);
+                } else {
+                    li.appendChild(avatar);
+                    li.appendChild(content);
+                }
+                list.appendChild(li);
+            });
+            list.scrollTop = list.scrollHeight;
+        }, err => {
+            console.error("Messages listener error:", err);
         });
 }
 
@@ -555,6 +636,26 @@ window.handleGoogleSignIn = async () => {
 window.handleLogout = () => auth.signOut();
 window.showTab       = showTab;
 window.submitWorkout = submitWorkout;
+
+window.sendMessage = async (e) => {
+    e.preventDefault();
+    const input = document.getElementById("message-input");
+    const text  = input.value.trim();
+    if (!text) return;
+    input.value = "";
+    const name = currentUser.displayName || currentUser.email;
+    try {
+        await db.collection("messages").add({
+            userId:      currentUser.uid,
+            displayName: name,
+            text:        text,
+            timestamp:   firebase.firestore.FieldValue.serverTimestamp()
+        });
+    } catch (err) {
+        console.error("sendMessage error:", err);
+        showToast("Erreur lors de l'envoi du message", "error");
+    }
+};
 
 window.changeReps = (v) => {
     const i = document.getElementById("reps-input");
