@@ -27,6 +27,7 @@ let adminPanel = null;
 // Listeners
 let unsubLeaderboard = null;
 let unsubFeed = null;
+let unsubCommunityTotal = null;
 let unsubMySessions = null;
 let unsubCompetition = null;
 let unsubMessages = null;
@@ -60,6 +61,7 @@ async function onUserSignedIn() {
     await loadPlatformSettings();
     subscribeLeaderboard();
     subscribeFeed();
+    subscribeCommunityTotal();
     subscribeMySessionsList();
     subscribeCompetition();
     subscribeMessages();
@@ -68,11 +70,12 @@ async function onUserSignedIn() {
 }
 
 function onUserSignedOut() {
-    if (unsubLeaderboard)  { unsubLeaderboard();  unsubLeaderboard  = null; }
-    if (unsubFeed)         { unsubFeed();          unsubFeed         = null; }
-    if (unsubMySessions)   { unsubMySessions();    unsubMySessions   = null; }
-    if (unsubCompetition)  { unsubCompetition();   unsubCompetition  = null; }
-    if (unsubMessages)     { unsubMessages();      unsubMessages     = null; }
+    if (unsubLeaderboard)     { unsubLeaderboard();     unsubLeaderboard     = null; }
+    if (unsubFeed)            { unsubFeed();             unsubFeed            = null; }
+    if (unsubCommunityTotal)  { unsubCommunityTotal();   unsubCommunityTotal  = null; }
+    if (unsubMySessions)      { unsubMySessions();       unsubMySessions      = null; }
+    if (unsubCompetition)     { unsubCompetition();      unsubCompetition     = null; }
+    if (unsubMessages)        { unsubMessages();         unsubMessages        = null; }
     if (compTimerInterval) { clearInterval(compTimerInterval); compTimerInterval = null; }
     document.getElementById("app-screen").classList.add("hidden");
     document.getElementById("auth-screen").classList.remove("hidden");
@@ -337,6 +340,24 @@ function subscribeFeed() {
         }, err => {
             console.error("Feed listener error:", err);
         });
+}
+
+function subscribeCommunityTotal() {
+    unsubCommunityTotal = db.collection("users").onSnapshot(snap => {
+        let total = 0;
+        let users = 0;
+        snap.forEach(doc => {
+            const reps = doc.data().totalReps || 0;
+            if (reps > 0) users++;
+            total += reps;
+        });
+        const el = document.getElementById("community-total");
+        if (el) {
+            el.textContent = total.toLocaleString("fr-FR") + " répétitions au total · " + users + " participant" + (users > 1 ? "s" : "");
+        }
+    }, err => {
+        console.error("Community total listener error:", err);
+    });
 }
 
 function subscribeMySessionsList() {
